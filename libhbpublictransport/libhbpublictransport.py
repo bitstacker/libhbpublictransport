@@ -1,4 +1,5 @@
 import os
+import sys
 import urllib.parse
 import urllib.request
 import json
@@ -26,7 +27,13 @@ class VBN(object):
             content = response.read()
         # parse result
         content = ET.fromstring(content)
-        return str(content[0][0].attrib['externalId'])
+        try:
+            stid = content[0][0].attrib['externalId']
+        except KeyError:
+            print("Keine Station gefunden. Sry :(")
+            sys.exit(-1)
+        return stid
+        
     
     def getScheduleForStation(self, stationid):
         # get todays date and time
@@ -41,8 +48,9 @@ class VBN(object):
         time.text = today.strftime("%H:%M:%S")
         ET.SubElement(streq,'Today')
         ET.SubElement(streq,'TableStation', {'externalId': stationid})
-        pf = ET.SubElement(streq,'ProductFilter')
-        pf.text = "1111111111111111"
+        #pf = ET.SubElement(streq,'ProductFilter')
+        #pf.text = "1111111111111111"
+        #pf.text = "8"
         data = ET.tostring(data, encoding="iso-8859-1")
         # send request
         req = urllib.request.Request(self.SERVERPATH, data)

@@ -59,7 +59,10 @@ class VBN(object):
         exportdata = []
         for entry in content.findall('./STBResIPhone/Entries/StationBoardEntry'):
             scheduled = self.__HafasTimeToDatetime(entry.attrib['scheduledTime']).strftime("%Y-%m-%d %H:%M:%S")
-            actual = self.__HafasTimeToDatetime(entry.attrib['actualTime']).strftime("%Y-%m-%d %H:%M:%S")
+            if 'actualTime' in entry.attrib:
+                actual = self.__HafasTimeToDatetime(entry.attrib['actualTime']).strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                actual = scheduled
             entrydata = {'scheduled': scheduled,
                         'actual': actual,
                         'type': entry.attrib['category'],

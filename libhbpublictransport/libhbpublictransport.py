@@ -49,9 +49,6 @@ class VBN(object):
         time.text = today.strftime("%H:%M:%S")
         ET.SubElement(streq,'Today')
         ET.SubElement(streq,'TableStation', {'externalId': stationid})
-        #pf = ET.SubElement(streq,'ProductFilter')
-        #pf.text = "1111111111111111"
-        #pf.text = "8"
         data = ET.tostring(data, encoding="iso-8859-1")
         # send request
         req = urllib.request.Request(self.SERVERPATH, data)

@@ -5,6 +5,7 @@ import urllib.request
 import json
 import xml.etree.ElementTree as ET
 import datetime as DT
+import re
     
 class VBN(object):
     SERVERPATH="https://fahrplaner.vbn.de/hafas/mgate.exe/dl"
@@ -58,7 +59,28 @@ class VBN(object):
             content = response.read()
         # parse result
         content = ET.fromstring(content)
+        exportdata = []
         for entry in content.findall('./STBResIPhone/Entries/StationBoardEntry'):
-            print(entry.attrib)
-        return False
+            scheduled = self.__HafasTimeToDatetime(entry.attrib['scheduledTime']).strftime("%Y-%m-%d %H:%M:%S")
+            actual = self.__HafasTimeToDatetime(entry.attrib['actualTime']).strftime("%Y-%m-%d %H:%M:%S")
+            entrydata = {'scheduled': scheduled,
+                        'actual': actual,
+                        'type': entry.attrib['category'],
+                        'number': entry.attrib['number'],
+                        'direction': entry.attrib['direction'],
+            }
+            exportdata.append(entrydata)
+        return json.dumps(exportdata, indent=4, separators=(',', ': '))
 
+    def __HafasTimeToDatetime(self, time):
+        p = re.compile('^\d+d')
+        m = p.match(time)
+        dtoday = DT.date.today()
+        days = 0
+        if m:
+            days = int(m.group().rstrip('d'))
+            time = re.sub(p,'',time)
+        dtime = DT.datetime.strptime(time, "%H:%M")
+        dt = DT.datetime.combine(dtoday, dtime.time())
+        dt = dt + DT.timedelta(days=days)
+        return dt            

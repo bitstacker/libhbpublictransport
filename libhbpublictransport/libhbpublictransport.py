@@ -3,6 +3,7 @@ import urllib.parse
 import urllib.request
 import json
 import xml.etree.ElementTree as ET
+import datetime as DT
     
 class VBN(object):
     SERVERPATH="https://fahrplaner.vbn.de/hafas/mgate.exe/dl"
@@ -28,6 +29,8 @@ class VBN(object):
         return str(content[0][0].attrib['externalId'])
     
     def getScheduleForStation(self, stationid):
+        # get todays date and time
+        today = DT.datetime.now()
         # generate xml request
         data = ET.Element('ReqC')
         data.set('ver', '1.1')
@@ -35,25 +38,19 @@ class VBN(object):
         data.set('lang', 'DE')
         streq = ET.SubElement(data,'STBReq', {'boardType': 'DEP'})
         time = ET.SubElement(streq,'Time')
-        time.tail = "Bla"
+        time.text = today.strftime("%H:%M:%S")
+        ET.SubElement(streq,'Today')
+        ET.SubElement(streq,'TableStation', {'externalId': stationid})
+        pf = ET.SubElement(streq,'ProductFilter')
+        pf.text = "1111111111111111"
         data = ET.tostring(data, encoding="iso-8859-1")
-        print(data)
-        
-        return False
-
-    
-
-
-    def __fetchBifyForStreetAndNumber(self,street,number,addition=''):
-        street = urllib.parse.quote(street,encoding="ISO-8859-1")
-        number = urllib.parse.quote(number,encoding="ISO-8859-1")
-        if addition != '':
-            addition = urllib.parse.quote(addition,encoding="ISO-8859-1")
-            url = self.SERVERPATH + "?strasse={}&hausnummer={}&zusatz={}".format(street,number,addition)
-        else:
-            url = self.SERVERPATH + "?strasse={}&hausnummer={}".format(street,number)
-        req = urllib.request.Request(url)
+        # send request
+        req = urllib.request.Request(self.SERVERPATH, data)
         with urllib.request.urlopen(req) as response:
             content = response.read()
-        content = content.decode("ISO-8859-1")
-        content = content.replace("<nobr><br>","</nobr>")#Hack for parsing siblings
+        # parse result
+        content = ET.fromstring(content)
+        for entry in content.findall('./STBResIPhone/Entries/StationBoardEntry'):
+            print(entry.attrib)
+        return False
+

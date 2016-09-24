@@ -56,7 +56,8 @@ class VBN(object):
             content = response.read()
         # parse result
         content = ET.fromstring(content)
-        exportdata = []
+        exportdata = {}
+        entries = []
         for entry in content.findall('./STBResIPhone/Entries/StationBoardEntry'):
             scheduled = self.__HafasTimeToDatetime(entry.attrib['scheduledTime']).strftime("%Y-%m-%d %H:%M:%S")
             if 'actualTime' in entry.attrib:
@@ -69,7 +70,9 @@ class VBN(object):
                         'number': entry.attrib['number'],
                         'direction': entry.attrib['direction'],
             }
-            exportdata.append(entrydata)
+            entries.append(entrydata)
+        exportdata = { 'entries': entries,
+                        'lastupdate': today.strftime("%d.%m.%Y %H:%M:%S")}
         return json.dumps(exportdata, indent=4, separators=(',', ': '))
 
     def __HafasTimeToDatetime(self, time):
